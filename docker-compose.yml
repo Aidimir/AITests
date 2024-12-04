@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  api:
+    restart: always
+    build:
+      context: .
+    ports:
+      - "8000:5000"
+    environment:
+      "AI: URL": "URL=${URL}"
+      "AI: key": "key=${key}"
+      "AI: version": "version=${version}"
