@@ -7,6 +7,6 @@ services:
     ports:
       - "8000:5000"
     environment:
-      "AI: URL": "URL=${URL}"
-      "AI: key": "key=${key}"
-      "AI: version": "version=${version}"
+      "AI:URL": "${URL}"
+      "AI:key": "${key}"
+      "AI:version": "${version}"

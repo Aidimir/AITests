@@ -1,9 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using AITests.Models.Response;
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -33,12 +31,9 @@ public class AITestsController : ControllerBase
         var json = await SendRequestToChatGpt(xmlContent, Instruction);
         var response = JsonSerializer.Deserialize<ChatResponse>(json);
 
-        var memoryStream = new MemoryStream();
         var textContent = response.Choices.Last().Message.Content;
-        string formattedContent = textContent.Replace("\\n", Environment.NewLine);
-        CreateWordDocument(memoryStream, textContent);
-        memoryStream.Seek(0, SeekOrigin.Begin);
-            
+        var formattedContent = textContent.Replace("\\n", Environment.NewLine);
+
         return Ok(formattedContent);
     }
 
@@ -75,23 +70,5 @@ public class AITestsController : ControllerBase
     {
         using var wordDoc = WordprocessingDocument.Open(file.OpenReadStream(), false);
         return wordDoc.MainDocumentPart?.Document.Body?.InnerText;
-    }
-
-    private void CreateWordDocument(MemoryStream stream, string content)
-    {
-        var wordDoc = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document);
-
-        var mainPart = wordDoc.AddMainDocumentPart();
-        mainPart.Document = new Document();
-        var body = mainPart.Document.AppendChild(new Body());
-
-        foreach (var line in content.Split('\n'))
-        {
-            var para = body.AppendChild(new Paragraph());
-            var run = para.AppendChild(new Run());
-            run.AppendChild(new Text(line));
-        }
-
-        mainPart.Document.Save();
     }
 }
