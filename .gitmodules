@@ -1,0 +1,3 @@
+[submodule "Authorization"]
+	path = Authorization
+	url = https://github.com/Aidimir/Authorization.git
