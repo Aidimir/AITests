@@ -5,8 +5,9 @@ services:
     build:
       context: .
     ports:
-      - "8000:5000"
+      - "70:5000"
     environment:
       "AI:URL": "${URL}"
       "AI:key": "${key}"
       "AI:version": "${version}"
+      "Authorization:URL": "${authURL}"

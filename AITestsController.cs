@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using AITests.Models.Response;
 using DocumentFormat.OpenXml.Packaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -24,6 +25,7 @@ public class AITestsController : ControllerBase
     }
 
     [HttpPost("generateTZ")]
+    [Authorize]
     public async Task<IActionResult> SendAiRequest(IFormFile technicalTask)
     {
         var xmlContent = ExtractFromDocx(technicalTask);
