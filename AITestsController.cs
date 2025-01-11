@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
+[Authorize]
 public class AITestsController : ControllerBase
 {
     private const string Instruction =
@@ -42,7 +43,6 @@ public class AITestsController : ControllerBase
     }
 
     [HttpPost("generateTZ")]
-    [Authorize]
     public async Task<IActionResult> SendAiRequest(IFormFile technicalTask)
     {
         var xmlContent = ExtractFromDocx(technicalTask);
@@ -101,6 +101,13 @@ public class AITestsController : ControllerBase
     public async Task<IActionResult> GetHistory()
     {
         return Ok(await _reqRespContext.GetAllUsersModelAsync(UserId));
+    }
+
+    [HttpDelete("remove")]
+    public async Task<IActionResult> RemoveHistory(Guid id)
+    {
+        await _reqRespContext.RemoveReqRespModelAsync(id, UserId);
+        return NoContent();
     }
 
     private string? ExtractFromDocx(IFormFile file)

@@ -20,4 +20,11 @@ public class ReqRespContext : DbContext
     {
         return await _reqRespModels.Where(m => m.UserId == userId).ToListAsync();
     }
+
+    public async Task RemoveReqRespModelAsync(Guid id, Guid userId)
+    {
+        var reqRespModel = await _reqRespModels.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+        _reqRespModels.Remove(reqRespModel);
+        await SaveChangesAsync();
+    }
 }
