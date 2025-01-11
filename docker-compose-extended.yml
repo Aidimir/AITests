@@ -1,0 +1,82 @@
+name: aitests
+services:
+  api:
+    build:
+      context: C:\Users\Aidimir\RiderProjects\AITests
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      AI:URL: https://api.proxyapi.ru/openai/v1
+      AI:key: sk-zfUgzzqzR0Sh9tTc1uXr73eAJmUtEG6v
+      AI:version: gpt-4o-mini
+      Authorization:URL: http://localhost:8000/validate
+      ConnectionStrings:DefaultConnection: Host=db; Port=5444; Database=AITests; Username=AITests; Password=1qaz2wsx
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5000
+        published: "70"
+        protocol: tcp
+    restart: always
+  db:
+    command:
+      - -p
+      - "5444"
+    container_name: tests_database_container
+    environment:
+      DB_HOST: db
+      POSTGRES_DB: AITests
+      POSTGRES_PASSWORD: 1qaz2wsx
+      POSTGRES_USER: AITests
+    expose:
+      - "5444"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U AITests -d AITests
+      timeout: 5s
+      interval: 3s
+      retries: 5
+    image: postgres
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5444
+        published: "5444"
+        protocol: tcp
+    restart: always
+    volumes:
+      - type: volume
+        source: db
+        target: /var/lib/postgresql/data
+        volume: {}
+  pgadmin:
+    container_name: tests_pgadmin4_container
+    depends_on:
+      db:
+        condition: service_started
+        required: true
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mail.ru
+      PGADMIN_DEFAULT_PASSWORD: 1qaz2wsx
+    image: dpage/pgadmin4
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5959"
+        protocol: tcp
+    restart: always
+networks:
+  default:
+    name: aitests_default
+volumes:
+  db:
+    name: aitests_db
+    driver: local
