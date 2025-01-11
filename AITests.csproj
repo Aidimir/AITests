@@ -11,9 +11,47 @@
         <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.1"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="OpenAI" Version="2.0.0"/>
         <PackageReference Include="OpenAI.ChatGPT" Version="4.1.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Authorization\**"/>
+        <Compile Remove="Dal\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Remove="Authorization\**"/>
+        <EmbeddedResource Remove="Dal\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Remove="Authorization\**"/>
+        <Content Remove="Dal\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Authorization\**"/>
+        <None Remove="Dal\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <_ContentIncludedByDefault Remove="Authorization\Api\appsettings.Development.json"/>
+        <_ContentIncludedByDefault Remove="Authorization\Api\appsettings.json"/>
+        <_ContentIncludedByDefault Remove="Authorization\Api\Properties\launchSettings.json"/>
+        <_ContentIncludedByDefault Remove="Authorization\global.json"/>
+        <_ContentIncludedByDefault Remove="Dal\obj\Dal.csproj.nuget.dgspec.json"/>
+        <_ContentIncludedByDefault Remove="Dal\obj\project.assets.json"/>
+        <_ContentIncludedByDefault Remove="Dal\obj\project.packagespec.json"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="Dal\Dal.csproj"/>
     </ItemGroup>
 
 </Project>

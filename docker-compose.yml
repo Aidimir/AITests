@@ -1,13 +1,56 @@
 version: "3.9"
+networks:
+  my-network:
+    driver: bridge
 services:
+  db:
+    container_name: tests_database_container
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+      - DB_HOST=${DB_HOST}
+    expose:
+      - "${DB_PORT}"
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db:/var/lib/postgresql/data
+    command: "-p ${DB_PORT}"
+  pgadmin:
+    container_name: tests_pgadmin4_container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      - db
   api:
     restart: always
     build:
       context: .
     ports:
       - "70:5000"
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
+      "ConnectionStrings:DefaultConnection": "Host=${DB_HOST}; Port=${DB_PORT}; Database=${DB_DATABASE}; Username=${DB_USERNAME}; Password=${DB_PASSWORD}"
       "AI:URL": "${URL}"
       "AI:key": "${key}"
       "AI:version": "${version}"
       "Authorization:URL": "${authURL}"
+
+volumes:
+  db:
+    driver: local

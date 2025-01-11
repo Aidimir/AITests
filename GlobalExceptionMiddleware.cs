@@ -26,7 +26,7 @@ public class GlobalExceptionHandlerMiddleware : IMiddleware
             _logger.LogError(e, e.Message);
             context.Response.ContentType = "application/json";
             var code = (int) DetectStatusCode(e);
-            context.Response.StatusCode = code >= 500 ? 400 : code;
+            context.Response.StatusCode = code;
             await context.Response.WriteAsJsonAsync(e.Message);
         }
     }

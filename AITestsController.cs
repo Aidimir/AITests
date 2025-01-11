@@ -1,6 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
 using AITests.Models.Response;
+using Dal;
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +18,27 @@ public class AITestsController : ControllerBase
 
     private readonly string _aiUrl;
     private readonly string _apiKey;
+
+    private readonly ReqRespContext _reqRespContext;
     private readonly string _version;
 
-    public AITestsController(IConfiguration configuration)
+    public AITestsController(IConfiguration configuration, ReqRespContext reqRespContext)
     {
         _aiUrl = configuration["AI:URL"];
         _apiKey = configuration["AI:key"];
         _version = configuration["AI:version"];
+        _reqRespContext = reqRespContext;
+    }
+
+    private Guid UserId
+    {
+        get
+        {
+            if (!Guid.TryParse(User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.NameId)?.Value,
+                    out var id))
+                throw new AuthenticationException("No user id was provided");
+            return id;
+        }
     }
 
     [HttpPost("generateTZ")]
@@ -62,10 +79,28 @@ public class AITestsController : ControllerBase
                 await client.PostAsync($"{_aiUrl}/chat/completions", content);
 
             if (response.IsSuccessStatusCode)
-                return await response.Content.ReadAsStringAsync();
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var model = new ReqRespModel
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = UserId,
+                    FileContent = fileContent,
+                    ResponseContent = responseContent
+                };
+
+                await _reqRespContext.AddToDbAsync(model);
+                return responseContent;
+            }
 
             return $"Ошибка: {response.StatusCode}";
         }
+    }
+
+    [HttpGet("tz-history")]
+    public async Task<IActionResult> GetHistory()
+    {
+        return Ok(await _reqRespContext.GetAllUsersModelAsync(UserId));
     }
 
     private string? ExtractFromDocx(IFormFile file)
