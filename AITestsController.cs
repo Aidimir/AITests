@@ -47,16 +47,19 @@ public class AITestsController : ControllerBase
     {
         var xmlContent = ExtractFromDocx(technicalTask);
 
-        var json = await SendRequestToChatGpt(xmlContent, Instruction);
-        var response = JsonSerializer.Deserialize<ChatResponse>(json);
+        var response = await SendRequestToChatGpt(xmlContent, Instruction);
 
-        var textContent = response.Choices.Last().Message.Content;
-        var formattedContent = textContent.Replace("\\n", Environment.NewLine);
-
-        return Ok(formattedContent);
+        if (!response.httpResponseMessage.IsSuccessStatusCode)
+            return new ContentResult
+            {
+                Content = response.httpResponseMessage.Content.ReadAsStringAsync().Result,
+                StatusCode = (int) response.httpResponseMessage.StatusCode
+            };
+        
+        return Ok(response.reqRespModel);
     }
 
-    private async Task<string> SendRequestToChatGpt(string fileContent, string instruction)
+    private async Task<(HttpResponseMessage httpResponseMessage, ReqRespModel? reqRespModel)> SendRequestToChatGpt(string fileContent, string instruction)
     {
         using (var client = new HttpClient())
         {
@@ -80,20 +83,24 @@ public class AITestsController : ControllerBase
 
             if (response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var responseString = await response.Content.ReadAsStringAsync();
+                var deserializedResponse = JsonSerializer.Deserialize<ChatResponse>(responseString);
+
+                var responseContent = deserializedResponse.Choices.Last().Message.Content;
+
                 var model = new ReqRespModel
                 {
                     Id = Guid.NewGuid(),
                     UserId = UserId,
                     FileContent = fileContent,
-                    ResponseContent = responseContent
+                    ResponseContent = responseContent.Replace("\\n", Environment.NewLine)
                 };
 
                 await _reqRespContext.AddToDbAsync(model);
-                return responseContent;
+                return (response, model);
             }
 
-            return $"Ошибка: {response.StatusCode}";
+            return (response, null);
         }
     }
 
